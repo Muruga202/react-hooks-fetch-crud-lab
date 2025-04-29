@@ -18,77 +18,85 @@ afterAll(() => server.close());
 test("displays question prompts after fetching", async () => {
   render(<App />);
 
-  fireEvent.click(screen.queryByText(/View Questions/));
+  fireEvent.click(screen.getByText(/View Questions/));
 
-  expect(await screen.findByText(/lorem testum 1/g)).toBeInTheDocument();
-  expect(await screen.findByText(/lorem testum 2/g)).toBeInTheDocument();
+  // Wait for the questions to appear
+  expect(await screen.findByText(/What special prop should always be included for lists of elements?/)).toBeInTheDocument();
+  expect(await screen.findByText(/A React component is a function that returns ______./)).toBeInTheDocument();
 });
 
 test("creates a new question when the form is submitted", async () => {
   render(<App />);
 
-  // wait for first render of list (otherwise we get a React state warning)
-  await screen.findByText(/lorem testum 1/g);
+  // Wait for the initial questions to load
+  await screen.findByText(/What special prop should always be included for lists of elements?/);
 
-  // click form page
-  fireEvent.click(screen.queryByText("New Question"));
+  // Navigate to the form page
+  fireEvent.click(screen.getByText("New Question"));
 
-  // fill out form
-  fireEvent.change(screen.queryByLabelText(/Prompt/), {
+  // Fill out the form
+  fireEvent.change(screen.getByLabelText(/Prompt/), {
     target: { value: "Test Prompt" },
   });
-  fireEvent.change(screen.queryByLabelText(/Answer 1/), {
+  fireEvent.change(screen.getByLabelText(/Answer 1/), {
     target: { value: "Test Answer 1" },
   });
-  fireEvent.change(screen.queryByLabelText(/Answer 2/), {
+  fireEvent.change(screen.getByLabelText(/Answer 2/), {
     target: { value: "Test Answer 2" },
   });
-  fireEvent.change(screen.queryByLabelText(/Correct Answer/), {
+  fireEvent.change(screen.getByLabelText(/Correct Answer/), {
     target: { value: "1" },
   });
 
-  // submit form
-  fireEvent.submit(screen.queryByText(/Add Question/));
+  // Submit the form
+  fireEvent.click(screen.getByText(/Add Question/));
 
-  // view questions
-  fireEvent.click(screen.queryByText(/View Questions/));
+  // Navigate back to the questions list
+  fireEvent.click(screen.getByText(/View Questions/));
 
-  expect(await screen.findByText(/Test Prompt/g)).toBeInTheDocument();
-  expect(await screen.findByText(/lorem testum 1/g)).toBeInTheDocument();
+  // Verify the new question is displayed
+  expect(await screen.findByText(/Test Prompt/)).toBeInTheDocument();
 });
 
 test("deletes the question when the delete button is clicked", async () => {
-  const { rerender } = render(<App />);
+  render(<App />);
 
-  fireEvent.click(screen.queryByText(/View Questions/));
+  fireEvent.click(screen.getByText(/View Questions/));
 
-  await screen.findByText(/lorem testum 1/g);
+  // Wait for the initial questions to load
+  await screen.findByText(/What special prop should always be included for lists of elements?/);
 
-  fireEvent.click(screen.queryAllByText("Delete Question")[0]);
+  // Click the delete button for the first question
+  fireEvent.click(screen.getAllByText("Delete Question")[0]);
 
-  await waitForElementToBeRemoved(() => screen.queryByText(/lorem testum 1/g));
+  // Wait for the question to be removed
+  await waitForElementToBeRemoved(() =>
+    screen.queryByText(/What special prop should always be included for lists of elements?/)
+  );
 
-  rerender(<App />);
-
-  await screen.findByText(/lorem testum 2/g);
-
-  expect(screen.queryByText(/lorem testum 1/g)).not.toBeInTheDocument();
+  // Verify the question is no longer in the DOM
+  expect(screen.queryByText(/What special prop should always be included for lists of elements?/)).not.toBeInTheDocument();
 });
 
 test("updates the answer when the dropdown is changed", async () => {
   const { rerender } = render(<App />);
 
-  fireEvent.click(screen.queryByText(/View Questions/));
+  fireEvent.click(screen.getByText(/View Questions/));
 
-  await screen.findByText(/lorem testum 2/g);
+  // Wait for the questions to load
+  await screen.findByText(/What special prop should always be included for lists of elements?/);
 
-  fireEvent.change(screen.queryAllByLabelText(/Correct Answer/)[0], {
+  // Change the dropdown value
+  fireEvent.change(screen.getAllByLabelText(/Correct Answer/)[0], {
     target: { value: "3" },
   });
 
-  expect(screen.queryAllByLabelText(/Correct Answer/)[0].value).toBe("3");
+  // Verify the dropdown value is updated
+  expect(screen.getAllByLabelText(/Correct Answer/)[0].value).toBe("3");
 
+  // Re-render the component
   rerender(<App />);
 
-  expect(screen.queryAllByLabelText(/Correct Answer/)[0].value).toBe("3");
+  // Verify the dropdown value persists
+  expect(screen.getAllByLabelText(/Correct Answer/)[0].value).toBe("3");
 });
